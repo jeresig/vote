@@ -135,7 +135,9 @@ CmdUtils.CreateCommand({
       });
 
       var comments = jQuery( "span.comment", context.focusedWindow.document ).filter(function(){
-        return match.test( jQuery(this).parent().find("a")[0].textContent + ": " + this.textContent );
+        var link = jQuery(this).parent().find("a")[0];
+        return link && jQuery(this).parent().prev(":has(a)").length &&
+	  match.test(link.textContent + ": " + this.textContent);
       }).parent();
 
       links = links.add( comments );
@@ -216,7 +218,9 @@ CmdUtils.CreateCommand({
       });
 
       var comments = jQuery( "span.comment", context.focusedWindow.document ).map(function(){
-        return jQuery(this).parent().find("a")[0].textContent + ": " + this.textContent;
+        var link = jQuery(this).parent().find("a")[0];
+        if ( link && jQuery(this).parent().prev(":has(a)").length )
+          return link.textContent + ": " + this.textContent;
       }).filter(function(){
         return match.test( this );
       });
