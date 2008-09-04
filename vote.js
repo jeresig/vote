@@ -49,8 +49,6 @@ function getDirections(direction){
       set = [ "up", "down", "none", "hide" ];
     } else if ( /news.ycombinator.com/.test( location ) ) {
       set = [ "up" ];
-    } else if ( /digg.com/.test( location ) ) {
-      set = [ "up", "down", "fave", "bury" ];
     }
   } else {
     set = [ "up" ];
@@ -75,13 +73,6 @@ function redditFilter(direction){
     "up": ".up",
     "none": ".downmod, .upmod",
     "hide": ".arrow"
-  })[direction];
-}
-
-function diggFilter(direction){
-  return ({
-    "down": "img[src*=bury.png]",
-    "up": "img[src*=digg.png]"
   })[direction];
 }
 
@@ -147,44 +138,6 @@ CmdUtils.CreateCommand({
         script.appendChild( context.focusedWindow.document.createTextNode( "vote(document.getElementById('" + this.id + "'));" ) );
         this.appendChild( script );
       });
-
-    } else if ( /digg.com/.test( location ) ) {
-      links = jQuery( "div.news-body h3", context.focusedWindow.document ).filter(function(){
-        return match.test( this.textContent );
-      });
-
-      if ( direction == "up" ) {
-        links.parent().next().find("li.digg-it a").each(function(){
-          var script = context.focusedWindow.document.createElement("script");
-          script.appendChild( context.focusedWindow.document.createTextNode( this.getAttribute("href") ) );
-          this.appendChild( script );
-        });
-      } else if ( direction == "fave" ) {
-        links.next().next().find("a.fave:visible").each(function(){
-          var script = context.focusedWindow.document.createElement("script");
-          script.appendChild( context.focusedWindow.document.createTextNode( this.getAttribute("onclick").replace(/return /, "") ) );
-          this.appendChild( script );
-        });
-      } else if ( direction == "bury" ) {
-        links.next().next().find("a.bury-link:visible").each(function(){
-          var script = context.focusedWindow.document.createElement("script");
-          script.appendChild( context.focusedWindow.document.createTextNode( this.getAttribute("href") ) );
-          this.appendChild( script );
-        });
-      }
-
-      if ( direction == "up" || direction == "down" ) {
-        var comments = jQuery( "div.c-body", context.focusedWindow.document ).each(function(){
-          var author = jQuery(this).prev().find("strong");
-          if ( author.length && match.test( author[0].textContent + ": " + this.textContent ) ) {
-            var img = jQuery(this).prev().prev().find(diggFilter(direction));
-            var script = context.focusedWindow.document.createElement("script");
-            script.appendChild( context.focusedWindow.document.createTextNode( 
-              "jQuery('#" + img[0].id + "').click();" ) );
-            this.appendChild( script );
-          }
-        });
-      }
     }
   },
 
@@ -223,29 +176,6 @@ CmdUtils.CreateCommand({
           return link.textContent + ": " + this.textContent;
       }).filter(function(){
         return match.test( this );
-      });
-
-      links = links.add( comments );
-
-    } else if ( /digg.com/.test( location ) ) {
-      links = jQuery( "div.news-body h3", context.focusedWindow.document ).filter(function(){
-        return match.test( this.textContent ) &&
-          direction != "down" &&
-         ((direction == "up" && jQuery(this).parent().next(":has(li.digg-it a)").length) ||
-          (direction == "bury" && jQuery(this).next().next(":has(div.bury)").length) ||
-          (direction == "fave" && jQuery(this).next().next(":has(a.fave:visible)").length));
-      });
-
-      var comments = jQuery( "div.c-body", context.focusedWindow.document ).map(function(){
-        var author = jQuery(this).prev().find("strong");
-        author = author.length ? author[0].textContent : "";
-        var comment = author + ": " + this.textContent
-
-        if ( author && match.test( comment ) &&
-          (direction == "up" || direction == "down") &&
-          jQuery(this).prev().prev().find(diggFilter(direction)).length ) {
-            return comment;
-        }
       });
 
       links = links.add( comments );
